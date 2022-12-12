@@ -25,6 +25,28 @@ app.secret_key = 'foobarbaz'
 
 db = SQLAlchemy(app)
 
+class userr(db.Model):
+    id = db.Column('id', db.Integer, primary_key=True)
+    userName = db.Column(db.String(100))
+    password = db.Column(db.String(50))
+    email = db.Column(db.String(200))
+
+    def __init__(self, userName, password, email):
+        self.userName = userName 
+        self.password = password
+        self.email = email
+
+class Box(db.Model):
+    id = db.Column('id', db.Integer, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('userr.id'))
+    ip = db.Column(db.String(50))
+    threadHum = db.Column(db.Integer,nullable=False)
+
+    def __init__(self,id, userId, ip, threadHum):
+        self.id = id
+        self.userId = userId 
+        self.ip=ip
+        self.threadHum  = threadHum 
 
 class students(db.Model):
     id = db.Column('student_id', db.Integer, primary_key=True)
@@ -44,6 +66,12 @@ def database_initialization_sequence():
             'John Doe',
             'Los Angeles',
             '123 Foobar Ave')
+
+    test_user = userr('user1', '', 'user@user.com')
+    test_box = Box(101,1,'192.168.1.131', 55.5)
+
+    db.session.add(test_user)
+    db.session.add(test_box)
 
     db.session.add(test_rec)
     db.session.rollback()
@@ -66,6 +94,23 @@ def home():
             flash('Record was succesfully added')
             return redirect(url_for('home'))
     return render_template('show_all.html', students=students.query.all())
+
+@app.route('/data', methods = ['GET'])
+def view_data_from_boxes():
+    return render_template('ttt.html')
+
+
+@app.route('/hum/<box_id>/<hum>', methods = ['GET','POST'])
+def  set_hum(box_id, hum):
+    if request.method == 'POST':
+        box = Box.query.filter_by(id=box_id).first()
+        box.threadHum = hum
+        db.session.commit()
+
+    #enviar valor novo para o pi
+    
+        print("funcioneiiiiiii")
+        return 'OKK'
 
 
 if __name__ == '__main__':
